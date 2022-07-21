@@ -1,4 +1,4 @@
-from transformers import GPTJForCausalLM, GPT2Tokenizer
+from transformers import BloomTokenizer, BloomForCausalLM
 import torch
 
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
@@ -8,10 +8,7 @@ device = "cuda:0" if torch.cuda.is_available() else "cpu"
 def init():
     global model
     global tokenizer
-
-    print("loading to CPU...")
-    model = GPTJForCausalLM.from_pretrained("EleutherAI/gpt-j-6B", revision="float16", torch_dtype=torch.float16, low_cpu_mem_usage=True)
-    print("done")
+    model = BloomForCausalLM.from_pretrained("bigscience/bloom-1b3")
 
     # conditionally load to GPU
     if device == "cuda:0":
@@ -19,7 +16,7 @@ def init():
         model.cuda()
         print("done")
 
-    tokenizer = GPT2Tokenizer.from_pretrained("EleutherAI/gpt-j-6B")
+    tokenizer = BloomTokenizerFast.from_pretrained("bigscience/bloom-1b3")
 
 
 # Inference is ran for every server call
@@ -34,10 +31,10 @@ def inference(model_inputs:dict) -> dict:
         return {'message': "No prompt provided"}
     
     # Tokenize inputs
-    input_tokens = tokenizer.encode(prompt, return_tensors="pt").to(device)
+    input_tokens = tokenizer(prompt, return_tensors="pt").to(device)
 
     # Run the model
-    output = model.generate(input_tokens)
+    output = model(**input_tokens, labels=inputs_tokens["input_ids"])
 
     # Decode output tokens
     output_text = tokenizer.batch_decode(output, skip_special_tokens = True)[0]
