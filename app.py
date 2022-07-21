@@ -34,7 +34,7 @@ def inference(model_inputs:dict) -> dict:
     input_tokens = tokenizer(prompt, return_tensors="pt").to(device)
 
     # Run the model
-    output = model(**input_tokens, labels=inputs_tokens["input_ids"])
+    output = model(**input_tokens, labels=input_tokens["input_ids"])
 
     # Decode output tokens
     output_text = tokenizer.batch_decode(output, skip_special_tokens = True)[0]
