@@ -1,4 +1,4 @@
-from transformers import BloomTokenizerFast, BloomForCausalLM
+from transformers import AutoModelForCausalLM, AutoTokenizer, set_seed
 import torch
 
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
@@ -8,15 +8,15 @@ device = "cuda:0" if torch.cuda.is_available() else "cpu"
 def init():
     global model
     global tokenizer
-    model = BloomForCausalLM.from_pretrained("bigscience/bloom-1b3")
-
+    model = AutoModelForCausalLM.from_pretrained("bigscience/bloom-6b3", use_cache=True)
+    print("hi")
     # conditionally load to GPU
     if device == "cuda:0":
         print("loading to GPU...")
         model.cuda()
         print("done")
 
-    tokenizer = BloomTokenizerFast.from_pretrained("bigscience/bloom-1b3")
+    tokenizer = AutoTokenizer.from_pretrained("bigscience/bloom-6b3")
 
 
 # Inference is ran for every server call
@@ -29,16 +29,12 @@ def inference(model_inputs:dict) -> dict:
     prompt = model_inputs.get('prompt', None)
     if prompt == None:
         return {'message': "No prompt provided"}
-    
-    # Tokenize inputs
-    input_tokens = tokenizer(prompt, return_tensors="pt").to(device)
-
-    # Run the model
-    output = model(**input_tokens, labels=input_tokens["input_ids"])
-
+    print(prompt)
+    inputs = tokenizer(prompt, return_tensors="pt").to(device)
+    outputs = model.generate(**inputs, max_length=200,  top_k=1, temperature=0.9, repetition_penalty = 2.0)
+    # print(outputs)
     # Decode output tokens
-    output_text = tokenizer.batch_decode(output, skip_special_tokens = True)[0]
-
+    output_text = tokenizer.decode(outputs[0])
     result = {"output": output_text}
 
     # Return the results as a dictionary
