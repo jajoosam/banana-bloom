@@ -8,7 +8,7 @@ device = "cuda:0" if torch.cuda.is_available() else "cpu"
 def init():
     global model
     global tokenizer
-    model = AutoModelForCausalLM.from_pretrained("bigscience/bloom-6b3", use_cache=True)
+    model = AutoModelForCausalLM.from_pretrained("bigscience/bloom-1b3", use_cache=True)
     print("hi")
     # conditionally load to GPU
     if device == "cuda:0":
@@ -16,7 +16,7 @@ def init():
         model.cuda()
         print("done")
 
-    tokenizer = AutoTokenizer.from_pretrained("bigscience/bloom-6b3")
+    tokenizer = AutoTokenizer.from_pretrained("bigscience/bloom-1b3")
 
 
 # Inference is ran for every server call
